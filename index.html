@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Night Shift 1: Jumpscare Update</title>
+    <title>Night Shift 1: Fixed Jumpscare</title>
     <style>
         body {
             background-color: #000;
@@ -26,7 +26,7 @@
             display: flex;
             flex-direction: column;
             box-shadow: 0 0 50px rgba(0,0,0,0.9);
-            overflow: hidden; /* Ensures jumpscare stays within border */
+            overflow: hidden;
         }
 
         /* --- MAIN OFFICE VIEW --- */
@@ -130,7 +130,7 @@
 
         #camera-screen {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%; /* Cover office */
+            top: 0; left: 0; width: 100%; height: 100%;
             background: #000;
             z-index: 50;
             display: none;
@@ -148,7 +148,6 @@
             overflow: hidden;
         }
         
-        /* Camera Static Effect */
         #cam-view::after {
             content: "";
             position: absolute;
@@ -208,7 +207,7 @@
         .usage-pip { width: 15px; height: 10px; background: #333; border: 1px solid #555; }
         .usage-pip.on { background: #4caf50; border-color: #0f0; }
 
-        /* --- SCREENS (Start/End) --- */
+        /* --- SCREENS --- */
         .overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -227,7 +226,7 @@
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background: black;
-            z-index: 200; /* Highest priority */
+            z-index: 200;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -235,55 +234,32 @@
         }
 
         .scare-face {
-            font-size: 50px; /* Start small */
+            font-size: 50px;
             opacity: 0;
         }
 
-        /* The animation class triggered by JS */
         .anim-zoom {
             animation: zoomScare 0.4s ease-in forwards;
         }
 
         @keyframes zoomScare {
-            0% {
-                transform: scale(0.5) rotate(-5deg);
-                opacity: 0;
-            }
-            20% {
-                opacity: 1;
-            }
-            100% {
-                transform: scale(15) rotate(5deg); /* Massive scale */
-                opacity: 1;
-            }
+            0% { transform: scale(0.5) rotate(-5deg); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: scale(15) rotate(5deg); opacity: 1; }
         }
 
         @keyframes grain {
             0%, 100% { transform: translate(0, 0); }
             10% { transform: translate(-5%, -5%); }
-            20% { transform: translate(-10%, 5%); }
-            30% { transform: translate(5%, -10%); }
-            40% { transform: translate(-5%, 15%); }
-            50% { transform: translate(-10%, 5%); }
-            60% { transform: translate(15%, 0); }
-            70% { transform: translate(0, 10%); }
-            80% { transform: translate(3%, 35%); }
-            90% { transform: translate(-10%, 10%); }
         }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-
     <div id="start-screen" class="overlay">
         <h1>NIGHT SHIFT 1</h1>
         <p>Survive until 6 AM.</p>
-        <div style="text-align: left; margin: 20px; color: #aaa; font-size: 14px;">
-            <p>1. Check Cameras (Bottom Bar) to track enemies.</p>
-            <p>2. If they appear at your door (Window), CLOSE IT.</p>
-            <p>3. They will wait a few seconds before attacking. Don't panic, but be quick.</p>
-        </div>
         <button onclick="startGame()">START NIGHT</button>
     </div>
 
@@ -354,11 +330,9 @@
             <span style="color: red; animation: blink 1s infinite;">● REC</span>
             <span id="cam-name">CAM 1A - STAGE</span>
         </div>
-        
         <div id="cam-view">
             <div class="cam-content" id="cam-render"></div>
         </div>
-
         <div id="map">
             <button class="map-btn" style="grid-area: cam1a" onclick="switchCam('1A')">CAM 1A (Stage)</button>
             <button class="map-btn" style="grid-area: cam1b" onclick="switchCam('1B')">CAM 1B (Dining)</button>
@@ -373,20 +347,17 @@
     <div id="camera-trigger" onclick="toggleCameraSystem()">
         <span style="letter-spacing: 2px;">[ MONITOR ]</span>
     </div>
-
 </div>
 
 <script>
     // --- CONFIGURATION ---
-    const TICK_RATE = 1000; // 1 second per tick
-    const NIGHT_LENGTH_MINUTES = 4; // Total real time length of night
+    const TICK_RATE = 1000; 
+    const NIGHT_LENGTH_MINUTES = 4;
     const HOUR_TICKS = (NIGHT_LENGTH_MINUTES * 60) / 6; 
     
-    // AI SETTINGS (0.1 = 10% chance to move per second)
+    // AI SETTINGS
     const AI_CHANCE_RED = 0.25; 
     const AI_CHANCE_SKULL = 0.15;
-    
-    // ATTACK PATIENCE (Seconds they wait at the door before killing you)
     const ATTACK_DELAY_MIN = 4; 
     const ATTACK_DELAY_MAX = 8;
 
@@ -395,29 +366,23 @@
         playing: false,
         power: 100,
         timeTicks: 0,
-        usage: 1,
         camerasOpen: false,
         currentCam: '1A',
-        
-        // Left Side (Red)
+        powerOutageTriggered: false, // NEW: Prevents infinite loop
+
         leftDoor: false,
         leftLight: false,
-        leftPos: 0, // 0:Stage, 1:Dining, 2:W.Hall, 3:W.Door, 4:AT_WINDOW
+        leftPos: 0,
         leftAttackTimer: 0,
 
-        // Right Side (Skull)
         rightDoor: false,
         rightLight: false,
-        rightPos: 0, // 0:Stage, 1:Restrooms, 2:E.Hall, 3:E.Door, 4:AT_WINDOW
+        rightPos: 0,
         rightAttackTimer: 0
     };
 
     let gameTimer;
 
-    // --- ROOM DEFINITIONS ---
-    // Red Path: Stage(0) -> Dining(1) -> W.Hall(2) -> W.Door(3) -> WINDOW(4)
-    // Skull Path: Stage(0) -> Restrooms(1) -> E.Hall(2) -> E.Door(3) -> WINDOW(4)
-    
     function startGame() {
         document.getElementById('start-screen').classList.add('hidden');
         state.playing = true;
@@ -440,18 +405,23 @@
         }
 
         // 2. Power Drain
-        let drain = 0.2; // Base usage
-        if (state.leftDoor) drain += 0.6;
-        if (state.rightDoor) drain += 0.6;
-        if (state.leftLight) drain += 0.6;
-        if (state.rightLight) drain += 0.6;
-        if (state.camerasOpen) drain += 0.4;
+        let drain = 0.1; 
+        if (state.leftDoor) drain += 0.3;
+        if (state.rightDoor) drain += 0.3;
+        if (state.leftLight) drain += 0.3;
+        if (state.rightLight) drain += 0.3;
+        if (state.camerasOpen) drain += 0.2;
 
         state.power -= drain;
+        
+        // FIXED: Only trigger power outage once
         if (state.power <= 0) {
             state.power = 0;
-            triggerPowerOutage();
+            if (!state.powerOutageTriggered) {
+                triggerPowerOutage();
+            }
         }
+
         document.getElementById('ui-power').innerText = Math.floor(state.power) + "%";
         updateUsageMeter(drain);
 
@@ -460,39 +430,27 @@
     }
 
     function handleAI() {
-        if (state.power <= 0) return; // AI stops moving if power is out, waiting for jump
+        if (state.power <= 0) return; // AI stops moving if power is out
 
-        // --- RED (LEFT) ---
+        // Red Logic
         if (state.leftPos < 4 && Math.random() < AI_CHANCE_RED) {
             state.leftPos++;
-            if(state.leftPos === 4) {
-                // Just arrived at window. Set Attack Timer.
-                state.leftAttackTimer = getRandomInt(ATTACK_DELAY_MIN, ATTACK_DELAY_MAX);
-            }
+            if(state.leftPos === 4) state.leftAttackTimer = getRandomInt(ATTACK_DELAY_MIN, ATTACK_DELAY_MAX);
         }
-        // Attack Logic
         if (state.leftPos === 4) {
             if (state.leftDoor) {
-                // Blocked! Reset after a moment
-                if (Math.random() < 0.4) {
-                    state.leftPos = 0; // Go back to stage
-                    console.log("Red blocked, returning to stage");
-                }
+                if (Math.random() < 0.4) state.leftPos = 0;
             } else {
-                // Door open, countdown to death
                 state.leftAttackTimer--;
                 if (state.leftAttackTimer <= 0) jumpscare('RED');
             }
         }
 
-        // --- SKULL (RIGHT) ---
+        // Skull Logic
         if (state.rightPos < 4 && Math.random() < AI_CHANCE_SKULL) {
             state.rightPos++;
-            if(state.rightPos === 4) {
-                state.rightAttackTimer = getRandomInt(ATTACK_DELAY_MIN, ATTACK_DELAY_MAX);
-            }
+            if(state.rightPos === 4) state.rightAttackTimer = getRandomInt(ATTACK_DELAY_MIN, ATTACK_DELAY_MAX);
         }
-        // Attack Logic
         if (state.rightPos === 4) {
             if (state.rightDoor) {
                 if (Math.random() < 0.4) state.rightPos = 0; 
@@ -502,14 +460,9 @@
             }
         }
 
-        // Update Camera View if open
         if (state.camerasOpen) renderCamera();
-        
-        // Update Window Visuals (The eyes outside)
         updateVisuals();
     }
-
-    // --- CONTROLS ---
 
     function toggleDoor(side) {
         if (!state.playing || state.power <= 0) return;
@@ -537,30 +490,21 @@
     }
 
     function updateVisuals() {
-        // You only see them at the window (pos 4) if the light is ON
         const elRed = document.getElementById('enemy-window-left');
         const elSkull = document.getElementById('enemy-window-right');
-
-        if (state.leftPos === 4 && state.leftLight) elRed.style.display = 'block';
-        else elRed.style.display = 'none';
-
-        if (state.rightPos === 4 && state.rightLight) elSkull.style.display = 'block';
-        else elSkull.style.display = 'none';
+        if (state.leftPos === 4 && state.leftLight) elRed.style.display = 'block'; else elRed.style.display = 'none';
+        if (state.rightPos === 4 && state.rightLight) elSkull.style.display = 'block'; else elSkull.style.display = 'none';
     }
-
-    // --- CAMERA SYSTEM ---
 
     function toggleCameraSystem() {
         if (!state.playing || state.power <= 0) return;
         state.camerasOpen = !state.camerasOpen;
-        
         const camScreen = document.getElementById('camera-screen');
         const trigger = document.getElementById('camera-trigger');
-        
         if (state.camerasOpen) {
             camScreen.style.display = 'flex';
             trigger.innerHTML = "[ CLOSE MONITOR ]";
-            switchCam(state.currentCam); // Refresh view
+            switchCam(state.currentCam); 
         } else {
             camScreen.style.display = 'none';
             trigger.innerHTML = "[ MONITOR ]";
@@ -570,45 +514,33 @@
     function switchCam(camID) {
         state.currentCam = camID;
         document.getElementById('cam-name').innerText = "CAM " + camID;
-        
-        // Highlight button
         document.querySelectorAll('.map-btn').forEach(b => b.classList.remove('selected'));
-        const btns = document.querySelectorAll('.map-btn');
-        btns.forEach(b => { if(b.innerHTML.includes(camID)) b.classList.add('selected'); });
-
+        document.querySelectorAll('.map-btn').forEach(b => { if(b.innerHTML.includes(camID)) b.classList.add('selected'); });
         renderCamera();
     }
 
     function renderCamera() {
         const view = document.getElementById('cam-render');
-        view.innerHTML = ""; // Clear current
-
-        // Logic: Is anyone in this room?
+        view.innerHTML = "";
         let content = "";
         
-        // Red Logic
+        // Render enemies
         if (state.currentCam === '1A' && state.leftPos === 0) content += `<span style="color:#d32f2f">👹</span>`;
         if (state.currentCam === '1B' && state.leftPos === 1) content += `<span style="color:#d32f2f">👹</span>`;
         if (state.currentCam === '2A' && state.leftPos === 2) content += `<span style="color:#d32f2f">👹</span>`;
         if (state.currentCam === '4A' && state.leftPos === 3) content += `<span style="color:#d32f2f">👹</span>`;
 
-        // Skull Logic
         if (state.currentCam === '1A' && state.rightPos === 0) content += `<span style="color:#fff">💀</span>`;
         if (state.currentCam === '1C' && state.rightPos === 1) content += `<span style="color:#fff">💀</span>`;
         if (state.currentCam === '2B' && state.rightPos === 2) content += `<span style="color:#fff">💀</span>`;
         if (state.currentCam === '4B' && state.rightPos === 3) content += `<span style="color:#fff">💀</span>`;
 
         if (content === "") content = "<span style='font-size:30px; color:#333'>(EMPTY)</span>";
-        
         view.innerHTML = content;
     }
 
-    // --- UTILS ---
-
     function updateUsageMeter(drain) {
-        for(let i=1; i<=4; i++) {
-            document.getElementById('pip'+i).classList.remove('on');
-        }
+        for(let i=1; i<=4; i++) document.getElementById('pip'+i).classList.remove('on');
         if (drain > 0.3) document.getElementById('pip1').classList.add('on');
         if (drain > 0.5) document.getElementById('pip2').classList.add('on');
         if (drain > 0.8) document.getElementById('pip3').classList.add('on');
@@ -620,59 +552,50 @@
     }
 
     function triggerPowerOutage() {
+        state.powerOutageTriggered = true; // Set flag so this doesn't run again
+
         state.camerasOpen = false;
         document.getElementById('camera-screen').style.display = 'none';
         
-        // Open doors
+        // Open doors / Reset Lights
         state.leftDoor = false; state.rightDoor = false;
         state.leftLight = false; state.rightLight = false;
-        document.querySelector('.controls').style.display = 'none'; // Disable controls
+        document.querySelector('.controls').style.display = 'none';
         document.getElementById('door-l').parentElement.classList.remove('door-closed');
         document.getElementById('door-r').parentElement.classList.remove('door-closed');
         
         // Darken Room
         document.getElementById('office-view').style.opacity = '0.3';
         
+        // One time timer
         setTimeout(() => jumpscare('POWER'), 5000);
     }
 
-    // --- JUMPSCARE LOGIC ---
-
     function jumpscare(type) {
-        // 1. Stop Game
         state.playing = false;
         clearInterval(gameTimer);
 
-        // 2. Prepare Jumpscare Elements
         const jumpScreen = document.getElementById('jumpscare-screen');
         const jumpContent = document.getElementById('scare-content');
-        
-        // Close Camera if open
         document.getElementById('camera-screen').style.display = 'none';
         document.getElementById('hud').style.display = 'none';
 
-        // Select Face
-        let face = '👹'; // Default (Red or Power)
+        let face = '👹';
         let color = '#d32f2f';
-        if (type === 'SKULL') {
-            face = '💀';
-            color = '#fff';
-        }
+        if (type === 'SKULL') { face = '💀'; color = '#fff'; }
 
-        // Apply styles and show
         jumpContent.innerHTML = face;
         jumpContent.style.color = color;
         jumpContent.style.textShadow = `0 0 20px ${color}`;
         
         jumpScreen.classList.remove('hidden');
-        jumpContent.classList.add('anim-zoom'); // Trigger Animation
+        jumpContent.classList.add('anim-zoom');
 
-        // 3. Wait for animation to finish, then show Game Over
         setTimeout(() => {
-            jumpScreen.classList.add('hidden'); // Hide jumper
-            document.getElementById('game-over').classList.remove('hidden'); // Show Game Over
+            jumpScreen.classList.add('hidden');
+            document.getElementById('game-over').classList.remove('hidden');
             document.getElementById('death-msg').innerText = type + " CAUGHT YOU";
-        }, 500); // 500ms match the feel of the animation
+        }, 500);
     }
 
     function endGame(win) {
@@ -680,7 +603,6 @@
         clearInterval(gameTimer);
         document.getElementById('win-screen').classList.remove('hidden');
     }
-
 </script>
 </body>
 </html>
