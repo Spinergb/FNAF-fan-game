@@ -440,12 +440,12 @@
         }
 
         // 2. Power Drain
-        let drain = 0.1; // Base usage
-        if (state.leftDoor) drain += 0.3;
-        if (state.rightDoor) drain += 0.3;
-        if (state.leftLight) drain += 0.3;
-        if (state.rightLight) drain += 0.3;
-        if (state.camerasOpen) drain += 0.2;
+        let drain = 0.2; // Base usage
+        if (state.leftDoor) drain += 0.6;
+        if (state.rightDoor) drain += 0.6;
+        if (state.leftLight) drain += 0.6;
+        if (state.rightLight) drain += 0.6;
+        if (state.camerasOpen) drain += 0.4;
 
         state.power -= drain;
         if (state.power <= 0) {
