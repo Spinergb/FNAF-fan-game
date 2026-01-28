@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Five Nights: Custom & Golden Update</title>
+    <title>Five Nights: Hardcore Mode</title>
     <style>
         body {
             background-color: #000;
@@ -44,7 +44,6 @@
 
         .menu-options { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
         
-        /* Custom Night Sliders */
         .custom-row {
             display: flex;
             align-items: center;
@@ -73,12 +72,11 @@
             z-index: 5;
         }
 
-        /* Golden Freddy Overlay */
         #golden-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; /* Let clicks pass through */
-            z-index: 20; /* On top of room, below camera */
+            pointer-events: none;
+            z-index: 20;
             display: none;
             justify-content: center;
             align-items: center;
@@ -181,7 +179,6 @@
             overflow: hidden;
         }
 
-        /* Static effect overlay */
         #cam-view::after {
             content: "";
             position: absolute;
@@ -235,7 +232,6 @@
 
         .scare-img { width: 50%; opacity: 0; object-fit: contain; }
         
-        /* Standard Attack Animation */
         .anim-zoom { animation: zoomScare 0.4s ease-in forwards; }
         @keyframes zoomScare {
             0% { transform: scale(0.5) rotate(-5deg); opacity: 0; }
@@ -243,7 +239,6 @@
             100% { transform: scale(3.0) rotate(5deg); opacity: 1; }
         }
 
-        /* Golden Freddy Attack Animation (Static Face) */
         .golden-kill-anim {
             width: 100% !important; height: 100% !important;
             opacity: 1 !important;
@@ -251,15 +246,7 @@
         }
         @keyframes shake {
             0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
             50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(3px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
             100% { transform: translate(1px, -2px) rotate(-1deg); }
         }
 
@@ -403,57 +390,39 @@
         skull_jumpscare: "ChicaJumpscare.png",
         
         // Golden Freddy
-        golden_office: "GoldenFreddyOffice.png", // Sitting in office
-        golden_jumpscare: "GoldenJumpscare.png", // Full screen face
+        golden_office: "GoldenFreddyOffice.png",
+        golden_jumpscare: "GoldenJumpscare.png",
         
         // Power Outage
         power_jumpscare: "FreddyJumpscare.png"
     };
 
-    // --- GAME CONSTANTS ---
     const TICK_RATE = 1000; 
-    const NIGHT_LENGTH_MINUTES = 8; 
+    // MODIFIED: Night is now 16 minutes long (Slower Game Speed)
+    const NIGHT_LENGTH_MINUTES = 4; 
     const HOUR_TICKS = (NIGHT_LENGTH_MINUTES * 60) / 6; 
     
-    // --- DIFFICULTY PRESETS (Red, Skull, Golden) ---
-    // Levels are 0 to 20. 
-    // Higher number = faster movement / higher chance.
+    // DIFFICULTY PRESETS
     const NIGHT_DATA = {
-        1: { red: 1, skull: 1, gold: 1 },       // Very Easy
-        2: { red: 2, skull: 2, gold: 2 },       // Easy
-        3: { red: 4, skull: 4, gold: 4 },       // Medium
-        4: { red: 5, skull: 5, gold: 5 },      // Hard
-        5: { red: 15, skull: 12, gold: 10 }      // Very Hard
+        1: { red: 1, skull: 1, gold: 1 },
+        2: { red: 3, skull: 2, gold: 1 },
+        3: { red: 6, skull: 4, gold: 1 },
+        4: { red: 10, skull: 8, gold: 1 },
+        5: { red: 15, skull: 12, gold: 1 }
     };
 
-    // --- STATE ---
     let currentNight = parseInt(localStorage.getItem('fnaf_night')) || 1;
     let isCustomNight = false;
-
-    // AI Levels (Set at start of night)
     let aiLevels = { red: 0, skull: 0, gold: 0 };
-
     let state = {
-        playing: false,
-        power: 100,
-        timeTicks: 0,
-        camerasOpen: false,
-        currentCam: '1A',
-        powerOutageTriggered: false,
-
-        // Golden Freddy State
-        goldenActive: false,
-        goldenTimer: null,
-
-        // Red
+        playing: false, power: 100, timeTicks: 0, camerasOpen: false, currentCam: '1A', powerOutageTriggered: false,
+        goldenActive: false, goldenTimer: null,
         leftDoor: false, leftLight: false, leftPos: 0, leftAttackTimer: 0,
-        // Skull
         rightDoor: false, rightLight: false, rightPos: 0, rightAttackTimer: 0
     };
 
     let gameTimer;
 
-    // --- INITIALIZATION ---
     window.onload = function() {
         document.getElementById('menu-night-num').innerText = currentNight;
         if (currentNight > 5) {
@@ -473,7 +442,6 @@
     }
 
     function startGame(custom) {
-        // Setup Difficulty
         if (custom) {
             isCustomNight = true;
             aiLevels.red = parseInt(document.getElementById('ai-red').value);
@@ -481,20 +449,14 @@
             aiLevels.gold = parseInt(document.getElementById('ai-gold').value);
         } else {
             isCustomNight = false;
-            if (currentNight > 5) {
-                // Default to Night 5 difficulty if replaying or just create Night 6
-                aiLevels = { red: 18, skull: 18, gold: 8 }; 
-            } else {
-                aiLevels = NIGHT_DATA[currentNight];
-            }
+            if (currentNight > 5) aiLevels = { red: 18, skull: 18, gold: 8 }; 
+            else aiLevels = NIGHT_DATA[currentNight];
         }
 
-        // UI Setup
         document.getElementById('start-screen').classList.add('hidden');
         document.getElementById('custom-menu').classList.add('hidden');
         document.getElementById('ui-night-display').innerText = isCustomNight ? "Custom Night" : "Night " + currentNight;
         
-        // Preload Images
         document.getElementById('enemy-window-left').src = IMAGE_URLS.red_window;
         document.getElementById('enemy-window-right').src = IMAGE_URLS.skull_window;
         document.getElementById('golden-img').src = IMAGE_URLS.golden_office;
@@ -507,7 +469,6 @@
     function gameLoop() {
         if (!state.playing) return;
 
-        // 1. Time
         state.timeTicks++;
         let hour = 12 + Math.floor(state.timeTicks / HOUR_TICKS);
         if (hour > 12) hour -= 12;
@@ -518,13 +479,13 @@
             return;
         }
 
-        // 2. Power
-        let drain = 0.05; 
-        if (state.leftDoor) drain += 0.15;
-        if (state.rightDoor) drain += 0.15;
-        if (state.leftLight) drain += 0.15;
-        if (state.rightLight) drain += 0.15;
-        if (state.camerasOpen) drain += 0.1;
+        // MODIFIED: Drain reduced by 50% (Doubles available power)
+        let drain = 0.025; // Was 0.05
+        if (state.leftDoor) drain += 0.075; // Was 0.15
+        if (state.rightDoor) drain += 0.075;
+        if (state.leftLight) drain += 0.075;
+        if (state.rightLight) drain += 0.075;
+        if (state.camerasOpen) drain += 0.05; // Was 0.1
 
         state.power -= drain;
         
@@ -538,44 +499,34 @@
         document.getElementById('ui-power').innerText = Math.floor(state.power) + "%";
         updateUsageMeter(drain);
 
-        // 3. AI Logic
         handleAI();
     }
 
     function handleAI() {
         if (state.power <= 0) return; 
 
-        // --- GOLDEN FREDDY LOGIC ---
-        // Mechanics: Only appears when camera is DOWN.
-        // Logic: Small chance every second to appear if AI level > 0 and not already active.
+        // MODIFIED: Gold Check Divisor 200 -> 100 (Doubled speed)
         if (aiLevels.gold > 0 && !state.camerasOpen && !state.goldenActive) {
-            // Formula: 1 in (1000 / AI Level) chance per second roughly
-            // Higher AI = Higher chance
-            let chance = aiLevels.gold / 200; // e.g. Level 20 = 10% chance per second
-            if (Math.random() < chance) {
-                triggerGoldenFreddy();
-            }
+            let chance = aiLevels.gold / 100; 
+            if (Math.random() < chance) triggerGoldenFreddy();
         }
 
-        // --- RED LOGIC ---
-        // Chance Check (AI Level 1-20 maps to roughly 5% to 80% movement chance every 4-5 seconds)
-        // We simplify: Check every second, probability based on Level.
-        // Level 20 = 20/20 chance? No, let's cap it. Level/40 per tick.
-        if (state.leftPos < 4 && Math.random() < (aiLevels.red / 40)) {
+        // MODIFIED: Red Check Divisor 40 -> 20 (Doubled speed)
+        if (state.leftPos < 4 && Math.random() < (aiLevels.red / 20)) {
             state.leftPos++;
-            if(state.leftPos === 4) state.leftAttackTimer = 8; // Seconds before kill
+            if(state.leftPos === 4) state.leftAttackTimer = 8;
         }
         if (state.leftPos === 4) {
             if (state.leftDoor) {
-                if (Math.random() < 0.4) state.leftPos = 0; // Bonk door, go away
+                if (Math.random() < 0.4) state.leftPos = 0;
             } else {
                 state.leftAttackTimer--;
                 if (state.leftAttackTimer <= 0) jumpscare('RED');
             }
         }
 
-        // --- SKULL LOGIC ---
-        if (state.rightPos < 4 && Math.random() < (aiLevels.skull / 40)) {
+        // MODIFIED: Skull Check Divisor 40 -> 20 (Doubled speed)
+        if (state.rightPos < 4 && Math.random() < (aiLevels.skull / 20)) {
             state.rightPos++;
             if(state.rightPos === 4) state.rightAttackTimer = 8;
         }
@@ -597,26 +548,19 @@
         const goldOverlay = document.getElementById('golden-overlay');
         goldOverlay.style.display = 'flex';
         
-        // You have X seconds to put camera up
-        // Harder difficulty = less time? Let's say flat 5 seconds for now.
-        let reactionTime = Math.max(2, 6 - (aiLevels.gold / 5)); // Level 20 = 2 seconds
-
+        let reactionTime = Math.max(2, 6 - (aiLevels.gold / 5)); 
         state.goldenTimer = setTimeout(() => {
-            if (state.goldenActive) {
-                jumpscare('GOLD');
-            }
+            if (state.goldenActive) jumpscare('GOLD');
         }, reactionTime * 1000);
     }
 
     function clearGoldenFreddy() {
         if (!state.goldenActive) return;
-        
         state.goldenActive = false;
         clearTimeout(state.goldenTimer);
         document.getElementById('golden-overlay').style.display = 'none';
     }
 
-    // --- INPUT HANDLERS ---
     function toggleDoor(side) {
         if (!state.playing || state.power <= 0) return;
         if (side === 'left') {
@@ -644,26 +588,16 @@
 
     function toggleCameraSystem() {
         if (!state.playing || state.power <= 0) return;
-        
-        // CORE MECHANIC: Toggle Camera
         state.camerasOpen = !state.camerasOpen;
-        
         const camScreen = document.getElementById('camera-screen');
         const trigger = document.getElementById('camera-trigger');
         
         if (state.camerasOpen) {
-            // OPEN CAMERA
             camScreen.style.display = 'flex';
             trigger.innerHTML = "[ CLOSE MONITOR ]";
             switchCam(state.currentCam);
-            
-            // GOLDEN FREDDY COUNTER: If he's there, opening camera clears him
-            if (state.goldenActive) {
-                clearGoldenFreddy();
-            }
-
+            if (state.goldenActive) clearGoldenFreddy();
         } else {
-            // CLOSE CAMERA
             camScreen.style.display = 'none';
             trigger.innerHTML = "[ MONITOR ]";
         }
@@ -682,19 +616,16 @@
         view.innerHTML = "";
         let content = "";
         
-        // Red Logic
         if (state.currentCam === '1A' && state.leftPos === 0) content = `<img class="cam-img" src="${IMAGE_URLS.red_normal}">`;
         if (state.currentCam === '1B' && state.leftPos === 1) content = `<img class="cam-img" src="${IMAGE_URLS.red_normal}">`;
         if (state.currentCam === '2A' && state.leftPos === 2) content = `<img class="cam-img" src="${IMAGE_URLS.red_normal}">`;
         if (state.currentCam === '4A' && state.leftPos === 3) content = `<img class="cam-img" src="${IMAGE_URLS.red_normal}">`;
 
-        // Skull Logic
         if (state.currentCam === '1A' && state.rightPos === 0) content = `<img class="cam-img" src="${IMAGE_URLS.skull_normal}">`;
         if (state.currentCam === '1C' && state.rightPos === 1) content = `<img class="cam-img" src="${IMAGE_URLS.skull_normal}">`;
         if (state.currentCam === '2B' && state.rightPos === 2) content = `<img class="cam-img" src="${IMAGE_URLS.skull_normal}">`;
         if (state.currentCam === '4B' && state.rightPos === 3) content = `<img class="cam-img" src="${IMAGE_URLS.skull_normal}">`;
 
-        // Both on Stage
         if (state.currentCam === '1A' && state.leftPos === 0 && state.rightPos === 0) {
             content = `<img class="cam-img" src="${IMAGE_URLS.red_normal}" style="margin-right:10px"><img class="cam-img" src="${IMAGE_URLS.skull_normal}">`;
         }
@@ -706,20 +637,16 @@
     function updateVisuals() {
         const elRed = document.getElementById('enemy-window-left');
         const elSkull = document.getElementById('enemy-window-right');
-
-        if (state.leftPos === 4 && state.leftLight) elRed.style.display = 'block'; 
-        else elRed.style.display = 'none';
-
-        if (state.rightPos === 4 && state.rightLight) elSkull.style.display = 'block'; 
-        else elSkull.style.display = 'none';
+        if (state.leftPos === 4 && state.leftLight) elRed.style.display = 'block'; else elRed.style.display = 'none';
+        if (state.rightPos === 4 && state.rightLight) elSkull.style.display = 'block'; else elSkull.style.display = 'none';
     }
 
     function updateUsageMeter(drain) {
         for(let i=1; i<=4; i++) document.getElementById('pip'+i).classList.remove('on');
-        if (drain > 0.15) document.getElementById('pip1').classList.add('on');
-        if (drain > 0.3) document.getElementById('pip2').classList.add('on');
-        if (drain > 0.5) document.getElementById('pip3').classList.add('on');
-        if (drain > 0.7) document.getElementById('pip4').classList.add('on');
+        if (drain > 0.075) document.getElementById('pip1').classList.add('on');
+        if (drain > 0.15) document.getElementById('pip2').classList.add('on');
+        if (drain > 0.25) document.getElementById('pip3').classList.add('on');
+        if (drain > 0.35) document.getElementById('pip4').classList.add('on');
     }
 
     function triggerPowerOutage() {
@@ -731,12 +658,8 @@
         document.querySelector('.controls').style.display = 'none';
         document.getElementById('door-l').parentElement.classList.remove('door-closed');
         document.getElementById('door-r').parentElement.classList.remove('door-closed');
-        
         document.getElementById('office-view').style.opacity = '0.3';
-        
-        // If Golden Freddy was active, clear him so normal death plays
         clearGoldenFreddy(); 
-
         setTimeout(() => jumpscare('POWER'), 5000);
     }
 
@@ -751,41 +674,29 @@
         document.getElementById('camera-screen').style.display = 'none';
         document.getElementById('hud').style.display = 'none';
 
-        // Set Images
         if (type === 'RED') jumpImg.src = IMAGE_URLS.red_jumpscare;
         else if (type === 'SKULL') jumpImg.src = IMAGE_URLS.skull_jumpscare;
         else if (type === 'POWER') jumpImg.src = IMAGE_URLS.power_jumpscare;
         else if (type === 'GOLD') jumpImg.src = IMAGE_URLS.golden_jumpscare;
 
         jumpScreen.classList.remove('hidden');
-
-        // Golden Freddy has a different animation (Static Shake vs Zoom)
-        if (type === 'GOLD') {
-            jumpImg.classList.add('golden-kill-anim');
-            // Play a crash sound or just freeze
-        } else {
-            jumpImg.classList.add('anim-zoom');
-        }
+        if (type === 'GOLD') jumpImg.classList.add('golden-kill-anim');
+        else jumpImg.classList.add('anim-zoom');
 
         setTimeout(() => {
             jumpScreen.classList.add('hidden');
             document.getElementById('game-over').classList.remove('hidden');
             document.getElementById('death-msg').innerText = type === 'GOLD' ? "SYSTEM CRASH" : "CAUGHT BY " + type;
-        }, type === 'GOLD' ? 2000 : 500); // Golden jumpscare lasts longer
+        }, type === 'GOLD' ? 2000 : 500);
     }
 
     function winGame() {
         state.playing = false;
         clearInterval(gameTimer);
-        
-        // Progress Logic
-        if (!isCustomNight) {
-            if (currentNight < 6) {
-                currentNight++;
-                localStorage.setItem('fnaf_night', currentNight);
-            }
+        if (!isCustomNight && currentNight < 6) {
+            currentNight++;
+            localStorage.setItem('fnaf_night', currentNight);
         }
-
         document.getElementById('win-screen').classList.remove('hidden');
     }
 </script>
