@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Night Shift 1: Fixed Jumpscare</title>
+    <title>Night Shift 1: PNG Update</title>
     <style>
         body {
             background-color: #000;
@@ -68,16 +68,18 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
+            overflow: hidden;
         }
 
-        /* Enemy Faces in Window */
-        .window-enemy {
-            font-size: 90px;
-            display: none;
+        /* --- IMAGES (Windows) --- */
+        .window-enemy-img {
+            width: 80%;
+            height: auto;
+            display: none; /* Hidden by default */
             z-index: 2;
+            filter: drop-shadow(0 0 10px rgba(0,0,0,0.8));
         }
-        #enemy-window-left { color: #d32f2f; text-shadow: 0 0 20px red; }
-        #enemy-window-right { color: #fff; filter: grayscale(100%); text-shadow: 0 0 20px white; }
 
         .room-bg {
             flex-grow: 1;
@@ -153,16 +155,26 @@
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAIklEQVQIW2NkQAKrVq36zwjjgzj//v37zwjjgzhhYWGMIAIAiOMAmn7+HL4AAAAASUVORK5CYII=');
-            opacity: 0.1;
+            opacity: 0.15;
             animation: grain 0.1s steps(10) infinite;
             pointer-events: none;
+            z-index: 10;
+        }
+
+        /* --- IMAGES (Camera) --- */
+        .cam-img {
+            max-width: 60%;
+            max-height: 80%;
+            object-fit: contain;
+            filter: grayscale(80%) contrast(1.2);
         }
 
         .cam-content {
-            font-size: 100px;
-            color: #444;
+            width: 100%;
+            height: 100%;
             display: flex;
-            gap: 50px;
+            justify-content: center;
+            align-items: center;
         }
         
         #map {
@@ -181,6 +193,7 @@
                 "cam4a cam4b";
             gap: 5px;
             padding: 10px;
+            z-index: 20;
         }
         
         .map-btn {
@@ -233,9 +246,10 @@
             overflow: hidden;
         }
 
-        .scare-face {
-            font-size: 50px;
+        .scare-img {
+            width: 50%;
             opacity: 0;
+            object-fit: contain;
         }
 
         .anim-zoom {
@@ -245,7 +259,7 @@
         @keyframes zoomScare {
             0% { transform: scale(0.5) rotate(-5deg); opacity: 0; }
             20% { opacity: 1; }
-            100% { transform: scale(15) rotate(5deg); opacity: 1; }
+            100% { transform: scale(3.0) rotate(5deg); opacity: 1; }
         }
 
         @keyframes grain {
@@ -264,7 +278,7 @@
     </div>
 
     <div id="jumpscare-screen" class="hidden">
-        <div id="scare-content" class="scare-face"></div>
+        <img id="scare-img" class="scare-img" src="" alt="Jumpscare">
     </div>
 
     <div id="game-over" class="overlay hidden">
@@ -301,7 +315,7 @@
         <div class="door-frame">
             <div class="door-shutter" id="door-l"></div>
             <div class="hallway">
-                <div class="window-enemy" id="enemy-window-left">👹</div>
+                <img id="enemy-window-left" class="window-enemy-img" src="" alt="Left Enemy">
             </div>
             <div class="controls">
                 <button class="btn-door" id="btn-door-l" onclick="toggleDoor('left')">DOOR</button>
@@ -316,7 +330,7 @@
         <div class="door-frame">
             <div class="door-shutter" id="door-r"></div>
             <div class="hallway">
-                <div class="window-enemy" id="enemy-window-right">💀</div>
+                <img id="enemy-window-right" class="window-enemy-img" src="" alt="Right Enemy">
             </div>
             <div class="controls">
                 <button class="btn-door" id="btn-door-r" onclick="toggleDoor('right')">DOOR</button>
@@ -334,13 +348,13 @@
             <div class="cam-content" id="cam-render"></div>
         </div>
         <div id="map">
-            <button class="map-btn" style="grid-area: cam1a" onclick="switchCam('1A')">CAM 1A (Stage)</button>
-            <button class="map-btn" style="grid-area: cam1b" onclick="switchCam('1B')">CAM 1B (Dining)</button>
-            <button class="map-btn" style="grid-area: cam1c" onclick="switchCam('1C')">CAM 1C (Restrooms)</button>
-            <button class="map-btn" style="grid-area: cam2a" onclick="switchCam('2A')">CAM 2A (W. Hall)</button>
-            <button class="map-btn" style="grid-area: cam2b" onclick="switchCam('2B')">CAM 2B (E. Hall)</button>
-            <button class="map-btn" style="grid-area: cam4a" onclick="switchCam('4A')">CAM 4A (W. Door)</button>
-            <button class="map-btn" style="grid-area: cam4b" onclick="switchCam('4B')">CAM 4B (E. Door)</button>
+            <button class="map-btn" style="grid-area: cam1a" onclick="switchCam('1A')">CAM 1A</button>
+            <button class="map-btn" style="grid-area: cam1b" onclick="switchCam('1B')">CAM 1B</button>
+            <button class="map-btn" style="grid-area: cam1c" onclick="switchCam('1C')">CAM 1C</button>
+            <button class="map-btn" style="grid-area: cam2a" onclick="switchCam('2A')">CAM 2A</button>
+            <button class="map-btn" style="grid-area: cam2b" onclick="switchCam('2B')">CAM 2B</button>
+            <button class="map-btn" style="grid-area: cam4a" onclick="switchCam('4A')">CAM 4A</button>
+            <button class="map-btn" style="grid-area: cam4b" onclick="switchCam('4B')">CAM 4B</button>
         </div>
     </div>
 
@@ -350,16 +364,36 @@
 </div>
 
 <script>
+    // ==========================================
+    // === PASTE YOUR IMAGE LINKS HERE !!! ===
+    // ==========================================
+    const IMAGE_URLS = {
+        // Character 1 (Left Side - "Red")
+        red_normal:  "BonnieCamera.png", // Image on cameras
+        red_window:  "BonnieDoor.png", // Image at window
+        red_jumpscare: "BonneJumpscare.png", // Jumpscare face
+
+        // Character 2 (Right Side - "Skull")
+        skull_normal: "ChicaCamera.png",
+        skull_window: "ChicaDoor.png",
+        skull_jumpscare: "ChicaJumpscare.png",
+        
+        // Power Outage (Freddy)
+        power_jumpscare: "FreddyJumpscare.png"
+    };
+
     // --- CONFIGURATION ---
     const TICK_RATE = 1000; 
-    const NIGHT_LENGTH_MINUTES = 4;
+    
+    // UPDATED: Night is longer (8 mins real time)
+    const NIGHT_LENGTH_MINUTES = 8; 
     const HOUR_TICKS = (NIGHT_LENGTH_MINUTES * 60) / 6; 
     
-    // AI SETTINGS
-    const AI_CHANCE_RED = 0.25; 
-    const AI_CHANCE_SKULL = 0.15;
-    const ATTACK_DELAY_MIN = 4; 
-    const ATTACK_DELAY_MAX = 8;
+    // UPDATED: AI is Slower (Lower number = less frequent movement)
+    const AI_CHANCE_RED = 0.15;   // Was 0.25
+    const AI_CHANCE_SKULL = 0.10; // Was 0.15
+    const ATTACK_DELAY_MIN = 5; 
+    const ATTACK_DELAY_MAX = 10;
 
     // --- GAME STATE ---
     let state = {
@@ -368,7 +402,7 @@
         timeTicks: 0,
         camerasOpen: false,
         currentCam: '1A',
-        powerOutageTriggered: false, // NEW: Prevents infinite loop
+        powerOutageTriggered: false,
 
         leftDoor: false,
         leftLight: false,
@@ -385,6 +419,11 @@
 
     function startGame() {
         document.getElementById('start-screen').classList.add('hidden');
+        
+        // Pre-load images to window elements
+        document.getElementById('enemy-window-left').src = IMAGE_URLS.red_window;
+        document.getElementById('enemy-window-right').src = IMAGE_URLS.skull_window;
+
         state.playing = true;
         gameTimer = setInterval(gameLoop, TICK_RATE);
         updateVisuals();
@@ -404,17 +443,16 @@
             return;
         }
 
-        // 2. Power Drain
-        let drain = 0.1; 
-        if (state.leftDoor) drain += 0.3;
-        if (state.rightDoor) drain += 0.3;
-        if (state.leftLight) drain += 0.3;
-        if (state.rightLight) drain += 0.3;
-        if (state.camerasOpen) drain += 0.2;
+        // 2. Power Drain (UPDATED: Reduced Usage)
+        let drain = 0.05; // Base usage (very low)
+        if (state.leftDoor) drain += 0.15; // Was 0.3
+        if (state.rightDoor) drain += 0.15;
+        if (state.leftLight) drain += 0.15;
+        if (state.rightLight) drain += 0.15;
+        if (state.camerasOpen) drain += 0.1; // Was 0.2
 
         state.power -= drain;
         
-        // FIXED: Only trigger power outage once
         if (state.power <= 0) {
             state.power = 0;
             if (!state.powerOutageTriggered) {
@@ -430,7 +468,7 @@
     }
 
     function handleAI() {
-        if (state.power <= 0) return; // AI stops moving if power is out
+        if (state.power <= 0) return; 
 
         // Red Logic
         if (state.leftPos < 4 && Math.random() < AI_CHANCE_RED) {
@@ -490,10 +528,15 @@
     }
 
     function updateVisuals() {
+        // Only show images if light is on AND enemy is at position 4
         const elRed = document.getElementById('enemy-window-left');
         const elSkull = document.getElementById('enemy-window-right');
-        if (state.leftPos === 4 && state.leftLight) elRed.style.display = 'block'; else elRed.style.display = 'none';
-        if (state.rightPos === 4 && state.rightLight) elSkull.style.display = 'block'; else elSkull.style.display = 'none';
+
+        if (state.leftPos === 4 && state.leftLight) elRed.style.display = 'block'; 
+        else elRed.style.display = 'none';
+
+        if (state.rightPos === 4 && state.rightLight) elSkull.style.display = 'block'; 
+        else elSkull.style.display = 'none';
     }
 
     function toggleCameraSystem() {
@@ -524,16 +567,24 @@
         view.innerHTML = "";
         let content = "";
         
-        // Render enemies
-        if (state.currentCam === '1A' && state.leftPos === 0) content += `<span style="color:#d32f2f">👹</span>`;
-        if (state.currentCam === '1B' && state.leftPos === 1) content += `<span style="color:#d32f2f">👹</span>`;
-        if (state.currentCam === '2A' && state.leftPos === 2) content += `<span style="color:#d32f2f">👹</span>`;
-        if (state.currentCam === '4A' && state.leftPos === 3) content += `<span style="color:#d32f2f">👹</span>`;
+        // Logic to show images on cameras
+        // Red Logic
+        if (state.currentCam === '1A' && state.leftPos === 0) content = `<img class="cam-img" src="${IMAGE_URLS.red_normal}">`;
+        if (state.currentCam === '1B' && state.leftPos === 1) content = `<img class="cam-img" src="${IMAGE_URLS.red_normal}">`;
+        if (state.currentCam === '2A' && state.leftPos === 2) content = `<img class="cam-img" src="${IMAGE_URLS.red_normal}">`;
+        if (state.currentCam === '4A' && state.leftPos === 3) content = `<img class="cam-img" src="${IMAGE_URLS.red_normal}">`;
 
-        if (state.currentCam === '1A' && state.rightPos === 0) content += `<span style="color:#fff">💀</span>`;
-        if (state.currentCam === '1C' && state.rightPos === 1) content += `<span style="color:#fff">💀</span>`;
-        if (state.currentCam === '2B' && state.rightPos === 2) content += `<span style="color:#fff">💀</span>`;
-        if (state.currentCam === '4B' && state.rightPos === 3) content += `<span style="color:#fff">💀</span>`;
+        // Skull Logic
+        if (state.currentCam === '1A' && state.rightPos === 0) content = `<img class="cam-img" src="${IMAGE_URLS.skull_normal}">`;
+        if (state.currentCam === '1C' && state.rightPos === 1) content = `<img class="cam-img" src="${IMAGE_URLS.skull_normal}">`;
+        if (state.currentCam === '2B' && state.rightPos === 2) content = `<img class="cam-img" src="${IMAGE_URLS.skull_normal}">`;
+        if (state.currentCam === '4B' && state.rightPos === 3) content = `<img class="cam-img" src="${IMAGE_URLS.skull_normal}">`;
+
+        // Both on Stage (Cam 1A) handling
+        if (state.currentCam === '1A' && state.leftPos === 0 && state.rightPos === 0) {
+            // Very simple hack: show both side by side or just Red overlapping
+            content = `<img class="cam-img" src="${IMAGE_URLS.red_normal}" style="margin-right:10px"><img class="cam-img" src="${IMAGE_URLS.skull_normal}">`;
+        }
 
         if (content === "") content = "<span style='font-size:30px; color:#333'>(EMPTY)</span>";
         view.innerHTML = content;
@@ -541,10 +592,10 @@
 
     function updateUsageMeter(drain) {
         for(let i=1; i<=4; i++) document.getElementById('pip'+i).classList.remove('on');
-        if (drain > 0.3) document.getElementById('pip1').classList.add('on');
-        if (drain > 0.5) document.getElementById('pip2').classList.add('on');
-        if (drain > 0.8) document.getElementById('pip3').classList.add('on');
-        if (drain > 1.0) document.getElementById('pip4').classList.add('on');
+        if (drain > 0.15) document.getElementById('pip1').classList.add('on');
+        if (drain > 0.3) document.getElementById('pip2').classList.add('on');
+        if (drain > 0.5) document.getElementById('pip3').classList.add('on');
+        if (drain > 0.7) document.getElementById('pip4').classList.add('on');
     }
 
     function getRandomInt(min, max) {
@@ -552,22 +603,19 @@
     }
 
     function triggerPowerOutage() {
-        state.powerOutageTriggered = true; // Set flag so this doesn't run again
+        state.powerOutageTriggered = true; 
 
         state.camerasOpen = false;
         document.getElementById('camera-screen').style.display = 'none';
         
-        // Open doors / Reset Lights
         state.leftDoor = false; state.rightDoor = false;
         state.leftLight = false; state.rightLight = false;
         document.querySelector('.controls').style.display = 'none';
         document.getElementById('door-l').parentElement.classList.remove('door-closed');
         document.getElementById('door-r').parentElement.classList.remove('door-closed');
         
-        // Darken Room
         document.getElementById('office-view').style.opacity = '0.3';
         
-        // One time timer
         setTimeout(() => jumpscare('POWER'), 5000);
     }
 
@@ -576,20 +624,18 @@
         clearInterval(gameTimer);
 
         const jumpScreen = document.getElementById('jumpscare-screen');
-        const jumpContent = document.getElementById('scare-content');
+        const jumpImg = document.getElementById('scare-img');
+        
         document.getElementById('camera-screen').style.display = 'none';
         document.getElementById('hud').style.display = 'none';
 
-        let face = '👹';
-        let color = '#d32f2f';
-        if (type === 'SKULL') { face = '💀'; color = '#fff'; }
+        // Select Image based on who killed you
+        if (type === 'RED') jumpImg.src = IMAGE_URLS.red_jumpscare;
+        else if (type === 'SKULL') jumpImg.src = IMAGE_URLS.skull_jumpscare;
+        else if (type === 'POWER') jumpImg.src = IMAGE_URLS.power_jumpscare;
 
-        jumpContent.innerHTML = face;
-        jumpContent.style.color = color;
-        jumpContent.style.textShadow = `0 0 20px ${color}`;
-        
         jumpScreen.classList.remove('hidden');
-        jumpContent.classList.add('anim-zoom');
+        jumpImg.classList.add('anim-zoom');
 
         setTimeout(() => {
             jumpScreen.classList.add('hidden');
