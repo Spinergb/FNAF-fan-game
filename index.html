@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Night Shift 1: Cameras & Patience</title>
+    <title>Night Shift 1: Jumpscare Update</title>
     <style>
         body {
             background-color: #000;
@@ -26,6 +26,7 @@
             display: flex;
             flex-direction: column;
             box-shadow: 0 0 50px rgba(0,0,0,0.9);
+            overflow: hidden; /* Ensures jumpscare stays within border */
         }
 
         /* --- MAIN OFFICE VIEW --- */
@@ -221,6 +222,42 @@
         }
         .hidden { display: none !important; }
 
+        /* --- JUMPSCARE ANIMATION STYLES --- */
+        #jumpscare-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: black;
+            z-index: 200; /* Highest priority */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .scare-face {
+            font-size: 50px; /* Start small */
+            opacity: 0;
+        }
+
+        /* The animation class triggered by JS */
+        .anim-zoom {
+            animation: zoomScare 0.4s ease-in forwards;
+        }
+
+        @keyframes zoomScare {
+            0% {
+                transform: scale(0.5) rotate(-5deg);
+                opacity: 0;
+            }
+            20% {
+                opacity: 1;
+            }
+            100% {
+                transform: scale(15) rotate(5deg); /* Massive scale */
+                opacity: 1;
+            }
+        }
+
         @keyframes grain {
             0%, 100% { transform: translate(0, 0); }
             10% { transform: translate(-5%, -5%); }
@@ -250,9 +287,14 @@
         <button onclick="startGame()">START NIGHT</button>
     </div>
 
+    <div id="jumpscare-screen" class="hidden">
+        <div id="scare-content" class="scare-face"></div>
+    </div>
+
     <div id="game-over" class="overlay hidden">
         <h1 style="color: red; font-size: 60px;">GAME OVER</h1>
         <p>You were too slow.</p>
+        <p id="death-msg" style="color: #666; font-size: 14px;"></p>
         <button onclick="location.reload()">TRY AGAIN</button>
     </div>
     
@@ -418,6 +460,8 @@
     }
 
     function handleAI() {
+        if (state.power <= 0) return; // AI stops moving if power is out, waiting for jump
+
         // --- RED (LEFT) ---
         if (state.leftPos < 4 && Math.random() < AI_CHANCE_RED) {
             state.leftPos++;
@@ -462,7 +506,7 @@
         if (state.camerasOpen) renderCamera();
         
         // Update Window Visuals (The eyes outside)
-        updateWindowVisuals();
+        updateVisuals();
     }
 
     // --- CONTROLS ---
@@ -489,10 +533,10 @@
             state.rightLight = on;
             document.getElementById('btn-light-r').classList.toggle('active', on);
         }
-        updateWindowVisuals();
+        updateVisuals();
     }
 
-    function updateWindowVisuals() {
+    function updateVisuals() {
         // You only see them at the window (pos 4) if the light is ON
         const elRed = document.getElementById('enemy-window-left');
         const elSkull = document.getElementById('enemy-window-right');
@@ -529,8 +573,6 @@
         
         // Highlight button
         document.querySelectorAll('.map-btn').forEach(b => b.classList.remove('selected'));
-        // Find button with specific text or area (simplified selector here)
-        // In a full app we'd ID buttons, but here:
         const btns = document.querySelectorAll('.map-btn');
         btns.forEach(b => { if(b.innerHTML.includes(camID)) b.classList.add('selected'); });
 
@@ -564,7 +606,6 @@
     // --- UTILS ---
 
     function updateUsageMeter(drain) {
-        // Just for visuals, how many pips to light up
         for(let i=1; i<=4; i++) {
             document.getElementById('pip'+i).classList.remove('on');
         }
@@ -586,6 +627,8 @@
         state.leftDoor = false; state.rightDoor = false;
         state.leftLight = false; state.rightLight = false;
         document.querySelector('.controls').style.display = 'none'; // Disable controls
+        document.getElementById('door-l').parentElement.classList.remove('door-closed');
+        document.getElementById('door-r').parentElement.classList.remove('door-closed');
         
         // Darken Room
         document.getElementById('office-view').style.opacity = '0.3';
@@ -593,11 +636,43 @@
         setTimeout(() => jumpscare('POWER'), 5000);
     }
 
+    // --- JUMPSCARE LOGIC ---
+
     function jumpscare(type) {
+        // 1. Stop Game
         state.playing = false;
         clearInterval(gameTimer);
-        document.getElementById('game-over').classList.remove('hidden');
-        document.getElementById('game-over').querySelector('p').innerText = type + " CAUGHT YOU";
+
+        // 2. Prepare Jumpscare Elements
+        const jumpScreen = document.getElementById('jumpscare-screen');
+        const jumpContent = document.getElementById('scare-content');
+        
+        // Close Camera if open
+        document.getElementById('camera-screen').style.display = 'none';
+        document.getElementById('hud').style.display = 'none';
+
+        // Select Face
+        let face = '👹'; // Default (Red or Power)
+        let color = '#d32f2f';
+        if (type === 'SKULL') {
+            face = '💀';
+            color = '#fff';
+        }
+
+        // Apply styles and show
+        jumpContent.innerHTML = face;
+        jumpContent.style.color = color;
+        jumpContent.style.textShadow = `0 0 20px ${color}`;
+        
+        jumpScreen.classList.remove('hidden');
+        jumpContent.classList.add('anim-zoom'); // Trigger Animation
+
+        // 3. Wait for animation to finish, then show Game Over
+        setTimeout(() => {
+            jumpScreen.classList.add('hidden'); // Hide jumper
+            document.getElementById('game-over').classList.remove('hidden'); // Show Game Over
+            document.getElementById('death-msg').innerText = type + " CAUGHT YOU";
+        }, 500); // 500ms match the feel of the animation
     }
 
     function endGame(win) {
