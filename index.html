@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Night Shift 1: PNG Update</title>
+    <title>Five Nights: Custom & Golden Update</title>
     <style>
         body {
             background-color: #000;
@@ -29,7 +29,40 @@
             overflow: hidden;
         }
 
-        /* --- MAIN OFFICE VIEW --- */
+        /* --- MENUS --- */
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #111;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .menu-options { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+        
+        /* Custom Night Sliders */
+        .custom-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        .ai-input {
+            width: 60px;
+            padding: 5px;
+            background: #000;
+            color: white;
+            border: 1px solid #555;
+            font-size: 20px;
+            text-align: center;
+        }
+
+        /* --- OFFICE --- */
         #office-view {
             flex-grow: 1;
             background: #000;
@@ -38,6 +71,22 @@
             display: flex;
             justify-content: space-between;
             z-index: 5;
+        }
+
+        /* Golden Freddy Overlay */
+        #golden-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; /* Let clicks pass through */
+            z-index: 20; /* On top of room, below camera */
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        #golden-img {
+            width: 60%;
+            opacity: 0.9;
+            filter: contrast(1.2) brightness(0.8);
         }
 
         .door-frame {
@@ -68,15 +117,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
             overflow: hidden;
         }
 
-        /* --- IMAGES (Windows) --- */
         .window-enemy-img {
             width: 80%;
             height: auto;
-            display: none; /* Hidden by default */
+            display: none; 
             z-index: 2;
             filter: drop-shadow(0 0 10px rgba(0,0,0,0.8));
         }
@@ -91,7 +138,6 @@
             color: #111;
         }
 
-        /* --- CONTROLS --- */
         .controls {
             margin-top: 20px;
             display: flex;
@@ -113,23 +159,8 @@
         }
         button:active { background: #444; }
         .active { background: #fff !important; color: #000 !important; border-color: #fff !important; box-shadow: 0 0 15px #fff; }
-        .btn-door.active { background: #d32f2f !important; color: white !important; border-color: red !important; box-shadow: 0 0 15px red; }
 
-        /* --- CAMERA SYSTEM --- */
-        #camera-trigger {
-            height: 40px;
-            background: #333;
-            color: #aaa;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            border-top: 2px solid #555;
-            z-index: 60;
-            font-size: 14px;
-        }
-        #camera-trigger:hover { background: #444; color: white; }
-
+        /* --- CAMERAS --- */
         #camera-screen {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -149,7 +180,8 @@
             align-items: center;
             overflow: hidden;
         }
-        
+
+        /* Static effect overlay */
         #cam-view::after {
             content: "";
             position: absolute;
@@ -161,120 +193,109 @@
             z-index: 10;
         }
 
-        /* --- IMAGES (Camera) --- */
-        .cam-img {
-            max-width: 60%;
-            max-height: 80%;
-            object-fit: contain;
-            filter: grayscale(80%) contrast(1.2);
-        }
+        .cam-img { max-width: 60%; max-height: 80%; object-fit: contain; filter: grayscale(80%) contrast(1.2); }
 
-        .cam-content {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
         #map {
             position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 250px;
-            height: 200px;
+            bottom: 20px; right: 20px;
+            width: 250px; height: 200px;
             border: 2px solid #444;
             background: rgba(0,0,0,0.8);
             display: grid;
-            grid-template-areas: 
-                "cam1a cam1a"
-                "cam1b cam1c"
-                "cam2a cam2b"
-                "cam4a cam4b";
-            gap: 5px;
-            padding: 10px;
-            z-index: 20;
+            grid-template-areas: "cam1a cam1a" "cam1b cam1c" "cam2a cam2b" "cam4a cam4b";
+            gap: 5px; padding: 10px; z-index: 20;
         }
         
-        .map-btn {
-            background: #222;
-            border: 1px solid #555;
-            color: #888;
-            font-size: 12px;
-            padding: 5px;
-        }
+        .map-btn { background: #222; border: 1px solid #555; color: #888; font-size: 12px; padding: 5px; }
         .map-btn.selected { background: #4caf50; color: black; border-color: #0f0; }
+
+        #camera-trigger {
+            height: 40px; background: #333; color: #aaa;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; border-top: 2px solid #555; z-index: 60; font-size: 14px;
+        }
 
         /* --- HUD --- */
         #hud {
-            position: absolute;
-            top: 20px; left: 20px; right: 20px;
-            display: flex;
-            justify-content: space-between;
-            pointer-events: none;
-            z-index: 60;
-            text-shadow: 1px 1px 0 #000;
+            position: absolute; top: 20px; left: 20px; right: 20px;
+            display: flex; justify-content: space-between;
+            pointer-events: none; z-index: 60; text-shadow: 1px 1px 0 #000;
         }
         .stat { font-size: 24px; }
         .usage-bar { display: flex; gap: 5px; align-items: center; margin-top: 5px; }
         .usage-pip { width: 15px; height: 10px; background: #333; border: 1px solid #555; }
         .usage-pip.on { background: #4caf50; border-color: #0f0; }
 
-        /* --- SCREENS --- */
-        .overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #111;
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-        .hidden { display: none !important; }
-
-        /* --- JUMPSCARE ANIMATION STYLES --- */
+        /* --- JUMPSCARES --- */
         #jumpscare-screen {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: black;
-            z-index: 200;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: black; z-index: 200;
+            display: flex; justify-content: center; align-items: center; overflow: hidden;
         }
 
-        .scare-img {
-            width: 50%;
-            opacity: 0;
-            object-fit: contain;
-        }
-
-        .anim-zoom {
-            animation: zoomScare 0.4s ease-in forwards;
-        }
-
+        .scare-img { width: 50%; opacity: 0; object-fit: contain; }
+        
+        /* Standard Attack Animation */
+        .anim-zoom { animation: zoomScare 0.4s ease-in forwards; }
         @keyframes zoomScare {
             0% { transform: scale(0.5) rotate(-5deg); opacity: 0; }
             20% { opacity: 1; }
             100% { transform: scale(3.0) rotate(5deg); opacity: 1; }
         }
 
-        @keyframes grain {
-            0%, 100% { transform: translate(0, 0); }
-            10% { transform: translate(-5%, -5%); }
+        /* Golden Freddy Attack Animation (Static Face) */
+        .golden-kill-anim {
+            width: 100% !important; height: 100% !important;
+            opacity: 1 !important;
+            animation: shake 0.1s infinite;
         }
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
     <div id="start-screen" class="overlay">
-        <h1>NIGHT SHIFT 1</h1>
-        <p>Survive until 6 AM.</p>
-        <button onclick="startGame()">START NIGHT</button>
+        <h1 style="font-size: 50px; text-shadow: 2px 2px red;">FIVE NIGHTS</h1>
+        <div class="menu-options">
+            <button onclick="startGame(false)">CONTINUE (Night <span id="menu-night-num">1</span>)</button>
+            <button onclick="resetProgress()">NEW GAME</button>
+            <button id="btn-custom" class="hidden" onclick="showCustomNight()">CUSTOM NIGHT</button>
+        </div>
+    </div>
+
+    <div id="custom-menu" class="overlay hidden">
+        <h1>CUSTOM NIGHT</h1>
+        <p>Set AI Levels (0 - 20)</p>
+        
+        <div class="custom-row">
+            <span style="color: #d32f2f; width: 100px;">RED:</span>
+            <input type="number" id="ai-red" class="ai-input" min="0" max="20" value="0">
+        </div>
+        <div class="custom-row">
+            <span style="color: #aaa; width: 100px;">SKULL:</span>
+            <input type="number" id="ai-skull" class="ai-input" min="0" max="20" value="0">
+        </div>
+        <div class="custom-row">
+            <span style="color: gold; width: 100px;">GOLD:</span>
+            <input type="number" id="ai-gold" class="ai-input" min="0" max="20" value="0">
+        </div>
+
+        <button onclick="startGame(true)" style="margin-top: 20px;">START</button>
     </div>
 
     <div id="jumpscare-screen" class="hidden">
@@ -283,21 +304,20 @@
 
     <div id="game-over" class="overlay hidden">
         <h1 style="color: red; font-size: 60px;">GAME OVER</h1>
-        <p>You were too slow.</p>
         <p id="death-msg" style="color: #666; font-size: 14px;"></p>
-        <button onclick="location.reload()">TRY AGAIN</button>
+        <button onclick="location.reload()">MAIN MENU</button>
     </div>
     
     <div id="win-screen" class="overlay hidden">
         <h1 style="color: #4caf50; font-size: 60px;">6:00 AM</h1>
-        <p>Shift Complete.</p>
-        <button onclick="location.reload()">LEAVE</button>
+        <p>Night Complete.</p>
+        <button onclick="location.reload()">NEXT</button>
     </div>
 
     <div id="hud">
         <div>
             <div class="stat" id="ui-time">12 AM</div>
-            <div style="font-size: 12px; color: #888;">Night 1</div>
+            <div style="font-size: 12px; color: #888;" id="ui-night-display">Night 1</div>
         </div>
         <div style="text-align: right;">
             <div class="stat" id="ui-power">100%</div>
@@ -312,6 +332,10 @@
     </div>
 
     <div id="office-view">
+        <div id="golden-overlay">
+            <img id="golden-img" src="" alt="Golden Freddy">
+        </div>
+
         <div class="door-frame">
             <div class="door-shutter" id="door-l"></div>
             <div class="hallway">
@@ -342,7 +366,7 @@
     <div id="camera-screen">
         <div style="padding: 10px 20px; background: #222; border-bottom: 1px solid #444; display: flex; justify-content: space-between;">
             <span style="color: red; animation: blink 1s infinite;">● REC</span>
-            <span id="cam-name">CAM 1A - STAGE</span>
+            <span id="cam-name">CAM 1A</span>
         </div>
         <div id="cam-view">
             <div class="cam-content" id="cam-render"></div>
@@ -365,37 +389,50 @@
 
 <script>
     // ==========================================
-    // === PASTE YOUR IMAGE LINKS HERE !!! ===
+    // === IMAGE LINKS ===
     // ==========================================
     const IMAGE_URLS = {
-        // Character 1 (Left Side - "Red")
-        red_normal:  "BonnieCamera.png", // Image on cameras
-        red_window:  "BonnieDoor.png", // Image at window
-        red_jumpscare: "BonneJumpscare.png", // Jumpscare face
+        // Red
+        red_normal:  "BonnieCamera.png",
+        red_window:  "BonnieDoor.png",
+        red_jumpscare: "BonneJumpscare.png",
 
-        // Character 2 (Right Side - "Skull")
+        // Skull
         skull_normal: "ChicaCamera.png",
         skull_window: "ChicaDoor.png",
         skull_jumpscare: "ChicaJumpscare.png",
         
-        // Power Outage (Freddy)
+        // Golden Freddy
+        golden_office: "GoldenFreddyOffice.png", // Sitting in office
+        golden_jumpscare: "GoldenJumpscare.png", // Full screen face
+        
+        // Power Outage
         power_jumpscare: "FreddyJumpscare.png"
     };
 
-    // --- CONFIGURATION ---
+    // --- GAME CONSTANTS ---
     const TICK_RATE = 1000; 
-    
-    // UPDATED: Night is longer (8 mins real time)
     const NIGHT_LENGTH_MINUTES = 8; 
     const HOUR_TICKS = (NIGHT_LENGTH_MINUTES * 60) / 6; 
     
-    // UPDATED: AI is Slower (Lower number = less frequent movement)
-    const AI_CHANCE_RED = 0.15;   // Was 0.25
-    const AI_CHANCE_SKULL = 0.10; // Was 0.15
-    const ATTACK_DELAY_MIN = 5; 
-    const ATTACK_DELAY_MAX = 10;
+    // --- DIFFICULTY PRESETS (Red, Skull, Golden) ---
+    // Levels are 0 to 20. 
+    // Higher number = faster movement / higher chance.
+    const NIGHT_DATA = {
+        1: { red: 0, skull: 0, gold: 0 },       // Very Easy
+        2: { red: 3, skull: 1, gold: 0 },       // Easy
+        3: { red: 6, skull: 4, gold: 1 },       // Medium
+        4: { red: 10, skull: 8, gold: 3 },      // Hard
+        5: { red: 15, skull: 12, gold: 5 }      // Very Hard
+    };
 
-    // --- GAME STATE ---
+    // --- STATE ---
+    let currentNight = parseInt(localStorage.getItem('fnaf_night')) || 1;
+    let isCustomNight = false;
+
+    // AI Levels (Set at start of night)
+    let aiLevels = { red: 0, skull: 0, gold: 0 };
+
     let state = {
         playing: false,
         power: 100,
@@ -404,25 +441,63 @@
         currentCam: '1A',
         powerOutageTriggered: false,
 
-        leftDoor: false,
-        leftLight: false,
-        leftPos: 0,
-        leftAttackTimer: 0,
+        // Golden Freddy State
+        goldenActive: false,
+        goldenTimer: null,
 
-        rightDoor: false,
-        rightLight: false,
-        rightPos: 0,
-        rightAttackTimer: 0
+        // Red
+        leftDoor: false, leftLight: false, leftPos: 0, leftAttackTimer: 0,
+        // Skull
+        rightDoor: false, rightLight: false, rightPos: 0, rightAttackTimer: 0
     };
 
     let gameTimer;
 
-    function startGame() {
+    // --- INITIALIZATION ---
+    window.onload = function() {
+        document.getElementById('menu-night-num').innerText = currentNight;
+        if (currentNight > 5) {
+            document.getElementById('btn-custom').classList.remove('hidden');
+            document.getElementById('menu-night-num').innerText = "COMPLETE";
+        }
+    };
+
+    function showCustomNight() {
         document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('custom-menu').classList.remove('hidden');
+    }
+
+    function resetProgress() {
+        localStorage.setItem('fnaf_night', 1);
+        location.reload();
+    }
+
+    function startGame(custom) {
+        // Setup Difficulty
+        if (custom) {
+            isCustomNight = true;
+            aiLevels.red = parseInt(document.getElementById('ai-red').value);
+            aiLevels.skull = parseInt(document.getElementById('ai-skull').value);
+            aiLevels.gold = parseInt(document.getElementById('ai-gold').value);
+        } else {
+            isCustomNight = false;
+            if (currentNight > 5) {
+                // Default to Night 5 difficulty if replaying or just create Night 6
+                aiLevels = { red: 18, skull: 18, gold: 8 }; 
+            } else {
+                aiLevels = NIGHT_DATA[currentNight];
+            }
+        }
+
+        // UI Setup
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('custom-menu').classList.add('hidden');
+        document.getElementById('ui-night-display').innerText = isCustomNight ? "Custom Night" : "Night " + currentNight;
         
-        // Pre-load images to window elements
+        // Preload Images
         document.getElementById('enemy-window-left').src = IMAGE_URLS.red_window;
         document.getElementById('enemy-window-right').src = IMAGE_URLS.skull_window;
+        document.getElementById('golden-img').src = IMAGE_URLS.golden_office;
 
         state.playing = true;
         gameTimer = setInterval(gameLoop, TICK_RATE);
@@ -439,17 +514,17 @@
         document.getElementById('ui-time').innerText = hour + " AM";
         
         if (Math.floor(state.timeTicks / HOUR_TICKS) === 6) {
-            endGame(true);
+            winGame();
             return;
         }
 
-        // 2. Power Drain (UPDATED: Reduced Usage)
-        let drain = 0.05; // Base usage (very low)
-        if (state.leftDoor) drain += 0.15; // Was 0.3
+        // 2. Power
+        let drain = 0.05; 
+        if (state.leftDoor) drain += 0.15;
         if (state.rightDoor) drain += 0.15;
         if (state.leftLight) drain += 0.15;
         if (state.rightLight) drain += 0.15;
-        if (state.camerasOpen) drain += 0.1; // Was 0.2
+        if (state.camerasOpen) drain += 0.1;
 
         state.power -= drain;
         
@@ -470,24 +545,39 @@
     function handleAI() {
         if (state.power <= 0) return; 
 
-        // Red Logic
-        if (state.leftPos < 4 && Math.random() < AI_CHANCE_RED) {
+        // --- GOLDEN FREDDY LOGIC ---
+        // Mechanics: Only appears when camera is DOWN.
+        // Logic: Small chance every second to appear if AI level > 0 and not already active.
+        if (aiLevels.gold > 0 && !state.camerasOpen && !state.goldenActive) {
+            // Formula: 1 in (1000 / AI Level) chance per second roughly
+            // Higher AI = Higher chance
+            let chance = aiLevels.gold / 200; // e.g. Level 20 = 10% chance per second
+            if (Math.random() < chance) {
+                triggerGoldenFreddy();
+            }
+        }
+
+        // --- RED LOGIC ---
+        // Chance Check (AI Level 1-20 maps to roughly 5% to 80% movement chance every 4-5 seconds)
+        // We simplify: Check every second, probability based on Level.
+        // Level 20 = 20/20 chance? No, let's cap it. Level/40 per tick.
+        if (state.leftPos < 4 && Math.random() < (aiLevels.red / 40)) {
             state.leftPos++;
-            if(state.leftPos === 4) state.leftAttackTimer = getRandomInt(ATTACK_DELAY_MIN, ATTACK_DELAY_MAX);
+            if(state.leftPos === 4) state.leftAttackTimer = 8; // Seconds before kill
         }
         if (state.leftPos === 4) {
             if (state.leftDoor) {
-                if (Math.random() < 0.4) state.leftPos = 0;
+                if (Math.random() < 0.4) state.leftPos = 0; // Bonk door, go away
             } else {
                 state.leftAttackTimer--;
                 if (state.leftAttackTimer <= 0) jumpscare('RED');
             }
         }
 
-        // Skull Logic
-        if (state.rightPos < 4 && Math.random() < AI_CHANCE_SKULL) {
+        // --- SKULL LOGIC ---
+        if (state.rightPos < 4 && Math.random() < (aiLevels.skull / 40)) {
             state.rightPos++;
-            if(state.rightPos === 4) state.rightAttackTimer = getRandomInt(ATTACK_DELAY_MIN, ATTACK_DELAY_MAX);
+            if(state.rightPos === 4) state.rightAttackTimer = 8;
         }
         if (state.rightPos === 4) {
             if (state.rightDoor) {
@@ -502,6 +592,31 @@
         updateVisuals();
     }
 
+    function triggerGoldenFreddy() {
+        state.goldenActive = true;
+        const goldOverlay = document.getElementById('golden-overlay');
+        goldOverlay.style.display = 'flex';
+        
+        // You have X seconds to put camera up
+        // Harder difficulty = less time? Let's say flat 5 seconds for now.
+        let reactionTime = Math.max(2, 6 - (aiLevels.gold / 5)); // Level 20 = 2 seconds
+
+        state.goldenTimer = setTimeout(() => {
+            if (state.goldenActive) {
+                jumpscare('GOLD');
+            }
+        }, reactionTime * 1000);
+    }
+
+    function clearGoldenFreddy() {
+        if (!state.goldenActive) return;
+        
+        state.goldenActive = false;
+        clearTimeout(state.goldenTimer);
+        document.getElementById('golden-overlay').style.display = 'none';
+    }
+
+    // --- INPUT HANDLERS ---
     function toggleDoor(side) {
         if (!state.playing || state.power <= 0) return;
         if (side === 'left') {
@@ -527,28 +642,28 @@
         updateVisuals();
     }
 
-    function updateVisuals() {
-        // Only show images if light is on AND enemy is at position 4
-        const elRed = document.getElementById('enemy-window-left');
-        const elSkull = document.getElementById('enemy-window-right');
-
-        if (state.leftPos === 4 && state.leftLight) elRed.style.display = 'block'; 
-        else elRed.style.display = 'none';
-
-        if (state.rightPos === 4 && state.rightLight) elSkull.style.display = 'block'; 
-        else elSkull.style.display = 'none';
-    }
-
     function toggleCameraSystem() {
         if (!state.playing || state.power <= 0) return;
+        
+        // CORE MECHANIC: Toggle Camera
         state.camerasOpen = !state.camerasOpen;
+        
         const camScreen = document.getElementById('camera-screen');
         const trigger = document.getElementById('camera-trigger');
+        
         if (state.camerasOpen) {
+            // OPEN CAMERA
             camScreen.style.display = 'flex';
             trigger.innerHTML = "[ CLOSE MONITOR ]";
-            switchCam(state.currentCam); 
+            switchCam(state.currentCam);
+            
+            // GOLDEN FREDDY COUNTER: If he's there, opening camera clears him
+            if (state.goldenActive) {
+                clearGoldenFreddy();
+            }
+
         } else {
+            // CLOSE CAMERA
             camScreen.style.display = 'none';
             trigger.innerHTML = "[ MONITOR ]";
         }
@@ -567,7 +682,6 @@
         view.innerHTML = "";
         let content = "";
         
-        // Logic to show images on cameras
         // Red Logic
         if (state.currentCam === '1A' && state.leftPos === 0) content = `<img class="cam-img" src="${IMAGE_URLS.red_normal}">`;
         if (state.currentCam === '1B' && state.leftPos === 1) content = `<img class="cam-img" src="${IMAGE_URLS.red_normal}">`;
@@ -580,14 +694,24 @@
         if (state.currentCam === '2B' && state.rightPos === 2) content = `<img class="cam-img" src="${IMAGE_URLS.skull_normal}">`;
         if (state.currentCam === '4B' && state.rightPos === 3) content = `<img class="cam-img" src="${IMAGE_URLS.skull_normal}">`;
 
-        // Both on Stage (Cam 1A) handling
+        // Both on Stage
         if (state.currentCam === '1A' && state.leftPos === 0 && state.rightPos === 0) {
-            // Very simple hack: show both side by side or just Red overlapping
             content = `<img class="cam-img" src="${IMAGE_URLS.red_normal}" style="margin-right:10px"><img class="cam-img" src="${IMAGE_URLS.skull_normal}">`;
         }
 
         if (content === "") content = "<span style='font-size:30px; color:#333'>(EMPTY)</span>";
         view.innerHTML = content;
+    }
+
+    function updateVisuals() {
+        const elRed = document.getElementById('enemy-window-left');
+        const elSkull = document.getElementById('enemy-window-right');
+
+        if (state.leftPos === 4 && state.leftLight) elRed.style.display = 'block'; 
+        else elRed.style.display = 'none';
+
+        if (state.rightPos === 4 && state.rightLight) elSkull.style.display = 'block'; 
+        else elSkull.style.display = 'none';
     }
 
     function updateUsageMeter(drain) {
@@ -598,16 +722,10 @@
         if (drain > 0.7) document.getElementById('pip4').classList.add('on');
     }
 
-    function getRandomInt(min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
-
     function triggerPowerOutage() {
         state.powerOutageTriggered = true; 
-
         state.camerasOpen = false;
         document.getElementById('camera-screen').style.display = 'none';
-        
         state.leftDoor = false; state.rightDoor = false;
         state.leftLight = false; state.rightLight = false;
         document.querySelector('.controls').style.display = 'none';
@@ -616,12 +734,16 @@
         
         document.getElementById('office-view').style.opacity = '0.3';
         
+        // If Golden Freddy was active, clear him so normal death plays
+        clearGoldenFreddy(); 
+
         setTimeout(() => jumpscare('POWER'), 5000);
     }
 
     function jumpscare(type) {
         state.playing = false;
         clearInterval(gameTimer);
+        clearTimeout(state.goldenTimer);
 
         const jumpScreen = document.getElementById('jumpscare-screen');
         const jumpImg = document.getElementById('scare-img');
@@ -629,24 +751,41 @@
         document.getElementById('camera-screen').style.display = 'none';
         document.getElementById('hud').style.display = 'none';
 
-        // Select Image based on who killed you
+        // Set Images
         if (type === 'RED') jumpImg.src = IMAGE_URLS.red_jumpscare;
         else if (type === 'SKULL') jumpImg.src = IMAGE_URLS.skull_jumpscare;
         else if (type === 'POWER') jumpImg.src = IMAGE_URLS.power_jumpscare;
+        else if (type === 'GOLD') jumpImg.src = IMAGE_URLS.golden_jumpscare;
 
         jumpScreen.classList.remove('hidden');
-        jumpImg.classList.add('anim-zoom');
+
+        // Golden Freddy has a different animation (Static Shake vs Zoom)
+        if (type === 'GOLD') {
+            jumpImg.classList.add('golden-kill-anim');
+            // Play a crash sound or just freeze
+        } else {
+            jumpImg.classList.add('anim-zoom');
+        }
 
         setTimeout(() => {
             jumpScreen.classList.add('hidden');
             document.getElementById('game-over').classList.remove('hidden');
-            document.getElementById('death-msg').innerText = type + " CAUGHT YOU";
-        }, 500);
+            document.getElementById('death-msg').innerText = type === 'GOLD' ? "SYSTEM CRASH" : "CAUGHT BY " + type;
+        }, type === 'GOLD' ? 2000 : 500); // Golden jumpscare lasts longer
     }
 
-    function endGame(win) {
+    function winGame() {
         state.playing = false;
         clearInterval(gameTimer);
+        
+        // Progress Logic
+        if (!isCustomNight) {
+            if (currentNight < 6) {
+                currentNight++;
+                localStorage.setItem('fnaf_night', currentNight);
+            }
+        }
+
         document.getElementById('win-screen').classList.remove('hidden');
     }
 </script>
