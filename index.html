@@ -410,11 +410,11 @@
     const HOUR_TICKS = (NIGHT_LENGTH_MINUTES * 60) / 6; 
     
     const NIGHT_DATA = {
-        1: { red: 1, skull: 1, gold: 1 },
-        2: { red: 3, skull: 2, gold: 1 },
-        3: { red: 6, skull: 4, gold: 1 },
-        4: { red: 10, skull: 8, gold: 1 },
-        5: { red: 15, skull: 12, gold: 1 }
+        1: { red: 1, skull: 1, gold: 0 },
+        2: { red: 3, skull: 2, gold: 0 },
+        3: { red: 6, skull: 4, gold: 0 },
+        4: { red: 8, skull: 8, gold: 1 },
+        5: { red: 9, skull: 9, gold: 1 }
     };
 
     let currentNight = parseInt(localStorage.getItem('fnaf_night')) || 1;
@@ -512,7 +512,7 @@
         if (state.power <= 0) return; 
 
         if (aiLevels.gold > 0 && !state.camerasOpen && !state.goldenActive) {
-            let chance = aiLevels.gold / 100; 
+            let chance = aiLevels.gold / 5000; 
             if (Math.random() < chance) triggerGoldenFreddy();
         }
 
