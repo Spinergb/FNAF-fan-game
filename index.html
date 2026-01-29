@@ -19,12 +19,10 @@
             margin: 0;
             overflow: hidden;
             user-select: none;
-            /* Prevent pull-to-refresh on mobile */
             overscroll-behavior: none;
         }
 
         #game-container {
-            /* Modified for PWA: Use aspect-ratio for better mobile scaling */
             width: 100%;
             max-width: 1024px;
             aspect-ratio: 4/3;
@@ -97,7 +95,7 @@
         }
 
         .door-frame {
-            width: 18%; /* Changed from fixed px to % for scaling */
+            width: 18%;
             height: 100%;
             background: #222;
             border-left: 5px solid #111;
@@ -163,7 +161,6 @@
             color: #fff;
             text-transform: uppercase;
             font-family: inherit;
-            /* PWA Touch friendly */
             touch-action: manipulation;
         }
         button:active { background: #444; }
@@ -206,7 +203,7 @@
         #map {
             position: absolute;
             bottom: 20px; right: 20px;
-            width: 30%; /* Responsive width */
+            width: 30%;
             min-width: 200px;
             height: 30%;
             border: 2px solid #444;
@@ -343,7 +340,7 @@
             </div>
             <div class="controls">
                 <button class="btn-door" id="btn-door-l" onclick="toggleDoor('left')">DOOR</button>
-                <button class="btn-light" id="btn-light-l" onmousedown="toggleLight('left', true)" onmouseup="toggleLight('left', false)" onmouseleave="toggleLight('left', false)">LIGHT</button>
+                <button class="btn-light" id="btn-light-l" onclick="toggleLight('left')">LIGHT</button>
             </div>
         </div>
 
@@ -358,7 +355,7 @@
             </div>
             <div class="controls">
                 <button class="btn-door" id="btn-door-r" onclick="toggleDoor('right')">DOOR</button>
-                <button class="btn-light" id="btn-light-r" onmousedown="toggleLight('right', true)" onmouseup="toggleLight('right', false)" onmouseleave="toggleLight('right', false)">LIGHT</button>
+                <button class="btn-light" id="btn-light-r" onclick="toggleLight('right')">LIGHT</button>
             </div>
         </div>
     </div>
@@ -388,9 +385,6 @@
 </div>
 
 <script>
-    // ==========================================
-    // === PWA SERVICE WORKER REGISTRATION ===
-    // ==========================================
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js')
@@ -399,40 +393,28 @@
         });
     }
 
-    // ==========================================
-    // === GAME LOGIC ===
-    // ==========================================
     const IMAGE_URLS = {
-        // Red
         red_normal:  "BonnieCamera.png",
         red_window:  "BonnieDoor.png",
         red_jumpscare: "BonneJumpscare.png",
-
-        // Skull
         skull_normal: "ChicaCamera.png",
         skull_window: "ChicaDoor.png",
         skull_jumpscare: "ChicaJumpscare.png",
-        
-        // Golden Freddy
         golden_office: "GoldenFreddyOffice.png",
         golden_jumpscare: "GoldenJumpscare.png",
-        
-        // Power Outage
         power_jumpscare: "FreddyJumpscare.png"
     };
 
     const TICK_RATE = 1000; 
-    // MODIFIED: Night is now 16 minutes long (Slower Game Speed)
-    const NIGHT_LENGTH_MINUTES = 8; 
+    const NIGHT_LENGTH_MINUTES = 4; 
     const HOUR_TICKS = (NIGHT_LENGTH_MINUTES * 60) / 6; 
     
-    // DIFFICULTY PRESETS
     const NIGHT_DATA = {
         1: { red: 1, skull: 1, gold: 1 },
-        2: { red: 3, skull: 2, gold: 2 },
-        3: { red: 6, skull: 4, gold: 3 },
-        4: { red: 9, skull: 8, gold: 4 },
-        5: { red: 12, skull: 12, gold: 5 }
+        2: { red: 3, skull: 2, gold: 1 },
+        3: { red: 6, skull: 4, gold: 1 },
+        4: { red: 10, skull: 8, gold: 1 },
+        5: { red: 15, skull: 12, gold: 1 }
     };
 
     let currentNight = parseInt(localStorage.getItem('fnaf_night')) || 1;
@@ -503,12 +485,13 @@
             return;
         }
 
-        let drain = 0.025; 
-        if (state.leftDoor) drain += 0.075; 
-        if (state.rightDoor) drain += 0.075;
-        if (state.leftLight) drain += 0.075;
-        if (state.rightLight) drain += 0.075;
-        if (state.camerasOpen) drain += 0.05; 
+        // MODIFIED: Increased Power Drain Logic significantly
+        let drain = 0.05; // Base drain doubled (was 0.025)
+        if (state.leftDoor) drain += 0.15; // Doors are heavy power users (was 0.075)
+        if (state.rightDoor) drain += 0.15;
+        if (state.leftLight) drain += 0.1; // Lights use power now (was 0.075)
+        if (state.rightLight) drain += 0.1;
+        if (state.camerasOpen) drain += 0.1; // Cameras use power (was 0.05)
 
         state.power -= drain;
         
@@ -594,14 +577,16 @@
         }
     }
 
-    function toggleLight(side, on) {
+    // MODIFIED: New Toggle Function for Lights (Works better on mobile)
+    function toggleLight(side) {
         if (!state.playing || state.power <= 0) return;
+        
         if (side === 'left') {
-            state.leftLight = on;
-            document.getElementById('btn-light-l').classList.toggle('active', on);
+            state.leftLight = !state.leftLight; // Flip state
+            document.getElementById('btn-light-l').classList.toggle('active', state.leftLight);
         } else {
-            state.rightLight = on;
-            document.getElementById('btn-light-r').classList.toggle('active', on);
+            state.rightLight = !state.rightLight; // Flip state
+            document.getElementById('btn-light-r').classList.toggle('active', state.rightLight);
         }
         updateVisuals();
     }
@@ -663,10 +648,11 @@
 
     function updateUsageMeter(drain) {
         for(let i=1; i<=4; i++) document.getElementById('pip'+i).classList.remove('on');
-        if (drain > 0.075) document.getElementById('pip1').classList.add('on');
+        // Adjusted usage bar thresholds for the new drain speeds
+        if (drain > 0.05) document.getElementById('pip1').classList.add('on');
         if (drain > 0.15) document.getElementById('pip2').classList.add('on');
-        if (drain > 0.25) document.getElementById('pip3').classList.add('on');
-        if (drain > 0.35) document.getElementById('pip4').classList.add('on');
+        if (drain > 0.35) document.getElementById('pip3').classList.add('on');
+        if (drain > 0.55) document.getElementById('pip4').classList.add('on');
     }
 
     function triggerPowerOutage() {
@@ -675,9 +661,17 @@
         document.getElementById('camera-screen').style.display = 'none';
         state.leftDoor = false; state.rightDoor = false;
         state.leftLight = false; state.rightLight = false;
+        
         document.querySelector('.controls').style.display = 'none';
+        
+        // Remove visual states so buttons don't look "on"
         document.getElementById('door-l').parentElement.classList.remove('door-closed');
         document.getElementById('door-r').parentElement.classList.remove('door-closed');
+        document.getElementById('btn-light-l').classList.remove('active');
+        document.getElementById('btn-light-r').classList.remove('active');
+        document.getElementById('btn-door-l').classList.remove('active');
+        document.getElementById('btn-door-r').classList.remove('active');
+
         document.getElementById('office-view').style.opacity = '0.3';
         clearGoldenFreddy(); 
         setTimeout(() => jumpscare('POWER'), 5000);
